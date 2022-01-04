@@ -1,0 +1,196 @@
+description: F5_system ve - IBM ansible / ALM deployment
+heat_template_version: '2016-04-08'
+
+parameters:
+  stack_name:
+    type: string
+  availability_zone:
+    type: string
+  instance_name:
+    type: string
+  system_image:
+    type: string
+  system_flavor:
+    type: string
+  vl-vdu-eth0-int:
+    type: string
+  admin_password:
+    type: string
+  root_password:
+    type: string
+  license:
+    type: string
+  default_gateway:
+    type: string
+    default: 171.47.2.1
+  vl-vdu-eth1-int:
+    type: string
+    default: int_net
+  vl-vdu-eth2-int:
+    type: string
+    default: ha_network
+
+resources:
+  system_data_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: security group rules for data interfaces
+      name: system_data_security_group
+      rules: 
+        - protocol: icmp
+          direction: ingress
+        - protocol: icmp
+          direction: egress
+        - protocol: tcp
+          direction: ingress
+        - protocol: tcp
+          direction: egress
+        - protocol: udp
+          direction: ingress
+        - protocol: udp
+          direction: egress
+
+  system_mgmt_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: security group rules for system mgmt port
+      name: system_mgmt_security_group
+      rules:
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: icmp
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 22
+          port_range_max: 22
+        - remote_ip_prefix: 0.0.0.0/0
+          protocol: tcp
+          port_range_min: 443
+          port_range_max: 443
+
+  mgmt_port:
+    properties:
+      name:
+        str_replace:
+          template: "stack_name_mgmt_port"
+          params:
+            stack_name: { get_param: stack_name }
+      network: { get_param: vl-vdu-eth0-int }
+      #port_security_enabled: true
+      security_groups: { get_resource: system_mgmt_security_group }
+    type: OS::Neutron::Port
+
+  ha_port:
+    properties:
+      name:
+        str_replace:
+          template: "stack_name_ha_port"
+          params:
+            stack_name: { get_param: stack_name }
+      network: { get_param: vl-vdu-eth2-int }
+      #port_security_enabled: true
+      security_groups: { get_resource: system_data_security_group }
+    type: OS::Neutron::Port
+
+  network_1_port:
+    properties:
+      name:
+        str_replace:
+          template: "stack_name_net1_port"
+          params:
+            stack_name: { get_param: stack_name }
+      network: { get_param: vl-vdu-eth1-int }
+      #port_security_enabled: true
+      security_groups: { get_resource: system_data_security_group }
+    type: OS::Neutron::Port
+
+  system_vm:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: instance_name }
+      #key_name: { get_param: os_ssh_key }
+      availability_zone: { get_param: availability_zone }
+      image: { get_param: system_image }
+      flavor: { get_param: system_flavor }
+      networks:
+        - port: { get_resource: mgmt_port }
+        - port: { get_resource: ha_port }
+        - port: { get_resource: network_1_port }
+      config_drive: no
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          params:
+            __admin_password__: { get_param: admin_password }
+            __root_password__: { get_param: root_password }
+            __license__: { get_param: license }
+            __default_gateway__: { get_param: default_gateway }
+            __network_1__: { get_param: vl-vdu-eth1-int }
+            __network_1_name__: { get_param: vl-vdu-eth1-int }
+            __network_2__: { get_param: vl-vdu-eth2-int }
+            __network_2_name__: { get_param: vl-vdu-eth1-int }
+          template: |
+            "system": {
+              "ssh_key_inject": "false",
+              "change_passwords": "true",
+              "admin_password": "__admin_password__",
+              "root_password": "__root_password__",
+              "license": {
+                  "basekey": "__license__",
+                  "host": "None",
+                  "port": "8080",
+                  "proxyhost": "None",
+                  "proxyport": "443",
+                  "proxyscripturl": "None"
+              },
+              "modules": {
+                  "auto_provision": "false",
+                  "ltm": "nominal",
+                  "gtm": "nominal",
+                  "afm": "nominal"
+              },
+              "network": {
+                  "dhcp": "false",
+                  "selfip_prefix": "selfip-",
+                  "routes": [
+                      {
+                        "destination": "0.0.0.0/0.0.0.0",
+                        "gateway": "__default_gateway__"
+                      }
+                  ],
+                  "interfaces": {
+                      "eth0": {
+                          "dhcp": "false",
+                          "selfip_allow_service": "default",
+                          "selfip_name": "selfip.HA",
+                          "selfip_description": "Self IP address for  HA subnet",
+                          "vlan_name": "vlan.HA",
+                          "vlan_description": "VLAN for  HA traffic",
+                          "is_failover": "true",
+                          "is_sync": "true",
+                          "is_mirror_primary": "true",
+                          "is_mirror_secondary": "false"
+                      },
+                      "eth1": {
+                          "dhcp": "false",
+                          "selfip_allow_service": "default",
+                          "selfip_name": "selfip.__vl-vdu-eth1-int__",
+                          "selfip_description": "Self IP address for SYSTEM __vl-vdu-eth2-int__",
+                          "vlan_name": "__network_1_name__",
+                          "vlan_description": "VLAN for SYSTEM __vl-vdu-eth1-int__ traffic",
+                          "is_failover": "false",
+                          "is_sync": "false",
+                          "is_mirror_primary": "false",
+                          "is_mirror_secondary": "false"
+                      }
+                  }
+              }
+            }
+
+
+outputs:
+  system_vm_instance_name:
+    description: Name of the instance
+    value: { get_attr: [system_vm, name] }
+  system_vm_mgmt_ip:
+    description: Floating IP address of VE servers
+    value: { get_attr: [ mgmt_port, fixed_ips, 0, ip_address ] }

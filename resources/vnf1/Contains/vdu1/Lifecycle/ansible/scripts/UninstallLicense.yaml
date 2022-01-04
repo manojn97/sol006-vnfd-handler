@@ -1,0 +1,18 @@
+- name: get instance
+  hosts: localhost
+  gather_facts: False
+  vars_files:
+    - vnf_vars/device.yml
+  tasks:
+    - name: Revoke License BIG-IP using a key
+      bigip_device_license:
+        accept_eula: yes
+        state: revoked
+        provider:
+          server: 192.168.90.6
+          user: admin
+          password: B!gip@f5
+          validate_certs: no
+        license_key: "HUJKC-BMTQA-XTNQG-LTQBK-BXZGPQS"
+      delegate_to: localhost
+      #when: license_mode == 'revoke'

@@ -1,0 +1,187 @@
+vnfd:
+  id: vnf1
+  provider: a vendor
+  product-name: example with property mapping
+  software-version: 5.1
+  version: 1.0
+  vnfm-info: "IBM CP4NA"
+  vdu:
+  - id: vdu1
+    name: A VDU
+    version: 1.0  
+    description: a VDU       
+    configurable-properties:
+      availability_zone: <vnf1.availability_zone>
+      stack_name: <instance.name>
+      id: <instance.id>
+      index: <instance.index>
+      system_image: <vnf1.system_image>         
+      system_flavor: <vnf1.system_flavor>         
+      admin_password: <vnf1.admin_password>          
+      root_password: <vnf1.root_password>        
+      license: <vnf1.license>         
+      default_gateway: <vnf1.default_gateway>            
+      vm_instance_name: <read-only>                           
+    int-cpd:
+    - id: vdu-eth0-int
+      virtual-network-interface-requirement:
+      - name: vdu-eth0
+        position: 0
+    - id: vdu-eth1-int
+      virtual-network-interface-requirement:
+      - name: vdu-eth1
+        position: 1
+    virtual-compute-desc: small-compute
+    virtual-storage-desc:
+    - main-storage
+    - backup-storage
+    sw-image-desc: system-image
+  - id: vdu2
+    name: Another VDU
+    version: 1.0
+    description: a VDU 
+    configurable-properties:
+      availability_zone: <vnf1.availability_zone>
+      stack_name: <instance.name>
+      system_image: <vnf1.system_image>         
+      system_flavor: <vnf1.system_flavor>         
+      admin_password: <vnf1.admin_password>          
+      root_password: <vnf1.root_password>        
+      license: <vnf1.license>         
+      default_gateway: <vnf1.default_gateway>            
+      vm_instance_name: <read-only>                                        
+    int-cpd:
+    - id: vdu-eth20-int
+      virtual-network-interface-requirement:
+      - name: vdu-eth0
+        position: 2
+    virtual-compute-desc: medium-compute
+    virtual-storage-desc:
+    - main-storage
+    sw-image-desc: system-image    
+  virtual-compute-desc:
+  - id: small-compute
+    virtual-cpu:
+      num-virtual-cpu: 1
+    virtual-memory:
+      size: "2.0"
+  - id: medium-compute
+    virtual-cpu:
+      num-virtual-cpu: 4
+    virtual-memory:
+      size: "16.0"      
+  virtual-storage-desc:
+  - id: main-storage
+    type-of-storage: BLOCK
+    block-storage-data:
+      size-of-storage: 10
+  - id: backup-storage
+    type-of-storage: BLOCK
+    block-storage-data:
+      size-of-storage: 20    
+  sw-image-desc:
+  - id: system-image
+    name: The Image
+    version: "1.1"
+    checksum:
+      algorithm: nfv:sha-224
+      hash: deadbeef
+    container-format: bare
+    disk-format: qcow2
+    min-disk: 0
+    min-ram: "2.0"
+    size: 1
+    image: <vnf1.system_image> 
+  ext-cpd:
+  - id: vnf-mgmt-ext
+    int-cpd:
+      cpd: vdu-eth0-int
+      vdu-id: vdu1
+  - id: vnf-internal-ext
+    int-cpd:
+      cpd: vdu-eth1-int
+      vdu-id: vdu1
+  - id: vnf-ha-ext
+    int-cpd:
+      cpd: vdu-eth0-int
+      vdu-id: vdu2
+  df:
+  - id: default-df
+    instantiation-level:
+    - id: single
+      vdu-level:
+      - number-of-instances: 1
+        vdu-id: vdu1  
+      - number-of-instances: 1
+        vdu-id: vdu2              
+        scaling-info:
+      - scaling-aspect-id: cluster
+        scaling-info:
+      - scaling-aspect-id: cluster      
+    vdu-profile:
+    - id: vdu1
+      min-number-of-instances: 1 
+    - id: vdu2
+      min-number-of-instances: 1              
+    default-instantiation-level: single
+    scaling-aspect:
+    - id: cluster
+      name: cluster
+      description: a description
+      max-scale-level: 2
+      aspect-delta-details:
+        deltas:
+        - id: first
+          vdu-delta: 
+          - id: vdu2
+            number-of-instances: 1              
+  configurable-properties:
+    availability_zone: <availability_zone> 
+    system_image: <system_image>
+    system_flavor: <system_flavor>   
+    admin_password: <admin_password>
+    root_password: <root_password>
+    license: <license>          
+    default_gateway: <default_gateway>   
+    system_vm_instance_name: <vdu1.vm_instance_name>    
+  lifecycle-management-script:
+  - id: vdu1.AddRule  
+    event: external-lifecycle-management-script-event   
+    lcm-transition-event: AddRule
+    script-input:
+      system_policy_name:
+        description: name of system policy 
+        type: string
+        default: system_policy
+      system_rule_name: 
+        description: name of system rule
+        type: string
+        default: system_rule
+      destination_ipaddr:
+        description: spgw ip address to add to system rule
+        type: string
+      source_ipaddr:
+        description: source ip address to add to system rule (change during reconfigure)
+        type: string
+        default: 10.10.1.0
+  - id: vdu1.RemovelRule 
+    event: external-lifecycle-management-script-event         
+    lcm-transition-event: RemoveRule
+    script-input:
+      system_policy_name:
+        description: name of system policy 
+        type: string
+        default: system_policy
+      system_rule_name: 
+        description: name of system rule
+        type: string
+        default: system_rule
+      destination_ipaddr:
+        description: spgw ip address to add to system rule
+        type: string
+      source_ipaddr:
+        description: source ip address to add to system rule (change during reconfigure)
+        type: string
+        default: 10.10.1.0   
+               
+      

@@ -1,0 +1,25 @@
+# HTTPS user/password
+#device_user: admin
+#new_pwd: B!gip@f5
+#mgmt_ip: 172.27.14.237
+#root_user: root
+#root_pass: f5l!cense123
+#device_port: 443
+
+partition: Common
+virtual_ip: 9.20.133.43
+#pool_member_host: 9.20.133.41
+pool_member_port: 80
+virtserver_name: f5_lb_pool
+connection_limit: 0
+monitor_status: enabled
+priority_group: 0
+rate_limit: 0
+ratio: 1
+session_state: enabled
+
+modules: ltm,afm
+
+source_ipaddr: 10.10.1.0
+firewall_policy_name: f5_firewall_policy
+firewall_rule_name: f5_firewall_rule

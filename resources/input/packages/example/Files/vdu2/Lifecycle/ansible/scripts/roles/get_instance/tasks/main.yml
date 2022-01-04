@@ -1,0 +1,9 @@
+- name: set provider
+  set_fact:
+    admin_provider:
+      server: "{{ properties.bigip_mgmt_ip }}"
+      server_port: "{{ properties.device_port }}"
+      user: "{{ properties.device_user }}"
+      password: "{{ properties.admin_password }}"
+      validate_certs: "no"
+      transport: rest

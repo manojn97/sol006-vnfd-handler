@@ -1,0 +1,25 @@
+- name: modules defined
+  set_fact:
+    modulelist: "{{ modules.split(',') }}"
+  when:  modules is defined
+
+- name: Provision modules at "nominal" level
+  bigip_provision:
+      module: "{{ item }}"
+      level: "nominal"
+      provider:
+        server: "{{ properties.bigip_mgmt_ip }}"
+        #server: 172.27.14.237
+        user: "{{ properties.device_user }}"
+        password: "{{ properties.admin_password }}"
+        validate_certs: no
+      state: "present"
+  with_items: "{{ modulelist }}"
+  delegate_to: localhost
+
+# - name: wait for f5 config utility
+#   wait_for_f5:
+#     device_ip: "{{ properties.bigip_mgmt_ip }}"
+#     timeout: 300
+#     sleep: 10
+#   delegate_to: localhost

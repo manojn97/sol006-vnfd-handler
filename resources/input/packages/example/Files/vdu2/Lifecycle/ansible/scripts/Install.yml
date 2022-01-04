@@ -1,0 +1,9 @@
+- name: install and configure license
+  hosts: bigip
+  gather_facts: False
+  vars_files:
+    - vnf_vars/device.yml
+  roles:
+    - { role: manage_license, license_mode: 'assign' }
+    - { role: provision_modules }
+    - { role: get_instance }

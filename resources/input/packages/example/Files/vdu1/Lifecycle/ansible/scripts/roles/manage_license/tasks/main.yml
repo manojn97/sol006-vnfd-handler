@@ -1,0 +1,46 @@
+- name:
+  pause:
+    minutes: 1
+
+#wait 300 seconds for port 443 to become open
+- name: wait for https connection 
+  wait_for:
+    port: 443
+    host: "{{ properties.bigip_mgmt_ip }}"
+    timeout: 300
+  delegate_to: localhost
+  when: license_mode == 'assign'
+
+- name: wait for f5 config utility
+  wait_for_f5:
+    device_ip: "{{ properties.bigip_mgmt_ip }}"
+    timeout: 600
+    sleep: 10
+  delegate_to: localhost
+  when: license_mode == 'assign'
+
+- name: License BIG-IP using a key
+  bigip_device_license:
+    accept_eula: yes
+    state: present
+    provider:
+      server: "{{ properties.bigip_mgmt_ip }}"
+      user: "{{ properties.device_user }}"
+      password: "{{ properties.admin_password }}"
+      validate_certs: no
+    license_key: "HUJKC-BMTQA-XTNQG-LTQBK-BXZGPQS"
+  delegate_to: localhost
+  when: license_mode == 'assign'
+
+- name: Revoke License BIG-IP using a key
+  bigip_device_license:
+    accept_eula: yes
+    state: revoked
+    provider:
+      server: "{{ properties.bigip_mgmt_ip }}"
+      user: "{{ properties.device_user }}"
+      password: "{{ properties.admin_password }}"
+      validate_certs: no
+    license_key: "HUJKC-BMTQA-XTNQG-LTQBK-BXZGPQS"
+  delegate_to: localhost
+  when: license_mode == 'revoke'

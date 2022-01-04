@@ -1,0 +1,126 @@
+name: assembly::vnf1::1.0
+description: Provider:a vendor; Product Name:example with property mapping ;Target
+  VNFM:IBM CP4NA
+properties:
+  availability_zone:
+    type: string
+  deployment_location:
+    type: string
+  system_image:
+    type: string
+  system_flavor:
+    type: string
+  admin_password:
+    type: string
+  root_password:
+    type: string
+  license:
+    type: string
+  default_gateway:
+    type: string
+  system_vm_instance_name:
+    value: ${vdu1.vm_instance_name}
+  vnf-mgmt-ext-vl:
+    type: string
+    description: Network for cpd vnf-mgmt-ext ext-cpd
+  vnf-mgmt-ext-ipaddress:
+    type: string
+    description: Ip Address for cpd vnf-mgmt-ext ext-cpd
+    read-only: true
+    value: ${vdu1.vdu-eth0-int-ipaddress}
+  vnf-internal-ext-vl:
+    type: string
+    description: Network for cpd vnf-internal-ext ext-cpd
+  vnf-internal-ext-ipaddress:
+    type: string
+    description: Ip Address for cpd vnf-internal-ext ext-cpd
+    read-only: true
+    value: ${vdu1.vdu-eth1-int-ipaddress}
+  vnf-ha-ext-vl:
+    type: string
+    description: Network for cpd vnf-ha-ext ext-cpd
+  vnf-ha-ext-ipaddress:
+    type: string
+    description: Ip Address for cpd vnf-ha-ext ext-cpd
+    read-only: true
+    value: ${vdu2.vdu-eth0-int-ipaddress}
+composition:
+  vdu1:
+    type: $lmctl:/contains:/vdu1:/descriptor_name
+    meta-type: vdu
+    quantity: 1
+    properties:
+      availability_zone:
+        type: string
+      system_image:
+        type: string
+      system_flavor:
+        type: string
+      admin_password:
+        type: string
+      root_password:
+        type: string
+      license:
+        type: string
+      default_gateway:
+        type: string
+      vm_instance_name:
+        read-only: true
+      vdu-eth0-int-vl:
+        type: string
+        description: Network for cpd vnf-mgmt-ext int-cpd
+        value: ${vnf-mgmt-ext-vl}
+      vdu-eth0-int-ipaddress:
+        type: string
+        description: Ip Address for cpd vnf-mgmt-ext int-cpd
+        read-only: true
+      vdu-eth1-int-vl:
+        type: string
+        description: Network for cpd vnf-internal-ext int-cpd
+        value: ${vnf-internal-ext-vl}
+      vdu-eth1-int-ipaddress:
+        type: string
+        description: Ip Address for cpd vnf-internal-ext int-cpd
+        read-only: true
+      deployment_location:
+        value: ${deployment_location}
+  vdu2:
+    type: $lmctl:/contains:/vdu2:/descriptor_name
+    meta-type: vdu
+    cluster:
+      initial-quantity: 1
+      minimum-nodes: 1
+      maximum-nodes: 2
+      scaling-increment: 1
+    properties:
+      availability_zone:
+        type: string
+      system_image:
+        type: string
+      system_flavor:
+        type: string
+      admin_password:
+        type: string
+      root_password:
+        type: string
+      license:
+        type: string
+      default_gateway:
+        type: string
+      vm_instance_name:
+        read-only: true
+      vdu-eth0-int-vl:
+        type: string
+        description: Network for cpd vnf-ha-ext int-cpd
+        value: ${vnf-ha-ext-vl}
+      vdu-eth0-int-ipaddress:
+        type: string
+        description: Ip Address for cpd vnf-ha-ext int-cpd
+        read-only: true
+      deployment_location:
+        value: ${deployment_location}
+operations:
+  AddRule:
+    source-operation: vdu1.AddRule
+  RemovelRule:
+    source-operation: vdu1.RemovelRule

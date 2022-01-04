@@ -1,0 +1,13 @@
+contains:
+- directory: vdu1
+  type: Resource
+  resource-manager: brent
+  name: vdu1
+- directory: vdu2
+  type: Resource
+  resource-manager: brent
+  name: vdu2
+schema: 2.0
+version: '1.0'
+type: Assembly
+name: vnf1

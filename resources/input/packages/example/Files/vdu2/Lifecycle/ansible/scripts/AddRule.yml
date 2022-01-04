@@ -1,0 +1,10 @@
+- name: adds a firewall rule 
+  hosts: localhost
+  gather_facts: False
+  vars_files:
+    - vnf_vars/device.yml
+  roles:
+    - { role: get_instance }
+    # add firewall rule
+    - { role: configure_firewall, firewall_state: 'present'  }
+

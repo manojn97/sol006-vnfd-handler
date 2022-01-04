@@ -1,0 +1,35 @@
+- name: reconfigure the firewall policy
+  hosts: localhost
+  gather_facts: False
+  vars_files:
+    - vnf_vars/device.yml
+  roles:
+    - { role: get_instance }
+  vars:
+    firewall_state: present
+  
+  tasks:
+    - name: reconfigure the existing rule in the firewall policy
+      bigip_firewall_rule:
+        state: "{{ firewall_state }}"
+        name: "{{ firewall_rule_name }}"
+        parent_policy: "{{ firewall_policy_name }}"
+        protocol: tcp
+        source:
+          - address: "{{ properties.source_ipaddr }}"
+          - address: "::1"
+          - port: 22
+          - port_range: 80-443
+        destination:
+          - address: "{{ properties.destination_ipaddr }}"
+          - address: "::1"
+          - port: 22
+          - port_range: 80-443
+        #irule: irule1
+        action: accept
+        logging: yes
+        provider: "{{ admin_provider }}"
+      delegate_to: localhost
+      when: firewall_state == 'present'
+
+

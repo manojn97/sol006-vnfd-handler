@@ -1,0 +1,68 @@
+- name: Create a basic policy with some rule stubs
+  bigip_firewall_policy:
+    state: "{{ firewall_state }}"
+    name: "{{ firewall_policy_name }}"
+    provider: "{{ admin_provider }}"
+  delegate_to: localhost
+  when: firewall_state == 'present'
+
+#bigip_firewall_address_list : create address list for f5 firewall
+#bigip_firewall_port_list: create port list for f5 firewall
+#bigip_firewall_rule_list : create rules list for f5 firewall 
+
+- name: Create a new rule in the foo firewall policy
+  bigip_firewall_rule:
+    state: "{{ firewall_state }}"
+    name: "{{ firewall_rule_name }}"
+    parent_policy: "{{ firewall_policy_name }}"
+    protocol: tcp
+    source:
+      - address: "{{ source_ipaddr }}"
+      - address: "::1"
+      - port: 22
+      - port_range: 80-443
+    destination:
+      - address: "{{ properties.destination_ipaddr }}"
+      - address: "::1"
+      - port: 22
+      - port_range: 80-443
+    #irule: irule1
+    action: accept
+    logging: yes
+    provider: "{{ admin_provider }}"
+  delegate_to: localhost
+  when: firewall_state == 'present'
+
+
+- name: removes the basic policy with some rules
+  bigip_firewall_policy:
+    state: "{{ firewall_state }}"
+    name: "{{ firewall_policy_name }}"
+    provider: "{{ admin_provider }}"
+  delegate_to: localhost
+  when: firewall_state == 'absent'
+
+
+- name: removes the rules in the f5 firewall policy
+  bigip_firewall_rule:
+    state: "{{ firewall_state }}"
+    name: "{{ firewall_rule_name }}"
+    parent_policy: "{{ firewall_policy_name }}"
+    protocol: tcp
+    source:
+      - address: "{{ source_ipaddr }}"
+      - address: "::1"
+      - port: 22
+      - port_range: 80-443
+    destination:
+      - address: "{{ properties.destination_ipaddr }}"
+      #- address: 171.41.2.27
+      - address: "::1"
+      - country: US
+      - port: 22
+      - port_range: 80-443
+    action: accept
+    logging: yes
+    provider: "{{ admin_provider }}"
+  delegate_to: localhost
+  when: firewall_state == 'absent'
